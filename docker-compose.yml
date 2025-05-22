@@ -1,0 +1,48 @@
+version: "3.8"
+services:
+  mongo:
+    image: mongo
+    container_name: docker-mongo-1
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - app-network
+    restart: always
+
+  backend:
+    build: ./backend
+    container_name: docker-backend-1
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongo
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/tododb
+      - JWT_SECRET=secret_key
+      - NODE_ENV=production
+    networks:
+      - app-network
+    restart: always
+
+  frontend:
+    build: ./frontend
+    container_name: docker-frontend-1
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    environment:
+      - REACT_APP_API_URL=http://backend:5000
+    networks:
+      - app-network
+    restart: always
+
+volumes:
+  mongo-data:
+
+networks:
+  app-network:
+    name: app-network
+    external: true
